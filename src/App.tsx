@@ -6,12 +6,15 @@ import VideoPlayer from './components/VideoPlayer';
 import Timeline from './components/Timeline';
 import ClipMarker from './components/ClipMarker';
 import ClipList from './components/ClipList';
+import ExportPanel from './components/ExportPanel';
 import { useVideoPlayer } from './hooks/useVideoPlayer';
 import { useClipManager } from './hooks/useClipManager';
+import { useFFmpeg } from './hooks/useFFmpeg';
 
 function App() {
   const [video, setVideo] = useState<VideoInfo | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const ffmpeg = useFFmpeg();
   const { currentTime, duration, seek } = useVideoPlayer(
     videoRef,
     video?.objectUrl
@@ -25,8 +28,9 @@ function App() {
     handleUpdateClip,
     handleDeleteClip,
     handleExportClip,
+    handleExportAll,
     handlePreviewClip,
-  } = useClipManager(currentTime, duration);
+  } = useClipManager(currentTime, duration, video?.file, videoRef, ffmpeg);
 
   function handleStep(seconds: number) {
     seek(videoRef.current!.currentTime + seconds);
@@ -70,6 +74,13 @@ function App() {
             onDeleteClip={handleDeleteClip}
             onExportClip={handleExportClip}
             onPreviewClip={handlePreviewClip}
+          />
+          <ExportPanel
+            clips={clips}
+            ffmpegLoaded={ffmpeg.loaded}
+            ffmpegLoading={ffmpeg.loading}
+            onExportAll={handleExportAll}
+            onLoadFFmpeg={ffmpeg.load}
           />
         </>
       )}

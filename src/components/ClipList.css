@@ -112,3 +112,11 @@
 .clip-list__actions a:hover {
   background: #388e3c;
 }
+
+.clip-list__download--done {
+  background: #78909c !important;
+}
+
+.clip-list__download--done:hover {
+  background: #546e7a !important;
+}

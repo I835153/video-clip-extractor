@@ -16,6 +16,9 @@ function crossOriginIsolation(): Plugin {
 
 export default defineConfig({
   plugins: [react(), crossOriginIsolation()],
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  },
   test: {
     environment: 'jsdom',
     globals: true,

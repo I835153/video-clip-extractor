@@ -74,6 +74,7 @@ function ClipRow({
 }: ClipRowProps) {
   const [editStart, setEditStart] = useState(formatTime(clip.startTime));
   const [editEnd, setEditEnd] = useState(formatTime(clip.endTime));
+  const [downloaded, setDownloaded] = useState(false);
 
   function handleStartBlur() {
     const parsed = parseTime(editStart);
@@ -140,9 +141,19 @@ function ClipRow({
         </button>
         <button onClick={() => onDeleteClip(clip.id)}>Delete</button>
         {clip.status === 'done' && clip.outputUrl && (
-          <a href={clip.outputUrl} download={filename}>
-            Download
+          <a
+            href={clip.outputUrl}
+            download={filename}
+            className={`clip-list__download ${downloaded ? 'clip-list__download--done' : ''}`}
+            onClick={() => setDownloaded(true)}
+          >
+            {downloaded ? 'Re-download' : 'Download'}
           </a>
+        )}
+        {clip.status === 'error' && clip.error && (
+          <span className="clip-list__error" title={clip.error}>
+            ⚠
+          </span>
         )}
       </td>
     </tr>
