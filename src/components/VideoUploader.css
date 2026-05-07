@@ -1,0 +1,25 @@
+.upload-zone {
+  border: 2px dashed #999;
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  color: #666;
+}
+
+.upload-zone:hover {
+  border-color: #555;
+  background-color: #fafafa;
+}
+
+.upload-zone--dragging {
+  border-color: #2196f3;
+  background-color: #e3f2fd;
+}
+
+.upload-error {
+  color: #d32f2f;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}

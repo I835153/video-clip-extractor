@@ -1,0 +1,27 @@
+.video-player {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.video-player__video {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+}
+
+.video-player__info {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.video-player__error {
+  color: #d32f2f;
+  background: #fce4ec;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
