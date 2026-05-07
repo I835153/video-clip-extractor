@@ -1,0 +1,114 @@
+.clip-list {
+  margin-top: 1rem;
+}
+
+.clip-list__empty {
+  color: #999;
+  text-align: center;
+  padding: 2rem;
+}
+
+.clip-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.clip-list__table th,
+.clip-list__table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.clip-list__table th {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.clip-list__label-input {
+  width: 100px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 0.85rem;
+}
+
+.clip-list__time-input {
+  width: 70px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.clip-list__duration {
+  font-family: monospace;
+}
+
+.clip-list__status {
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.clip-list__status--pending {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.clip-list__status--exporting {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.clip-list__status--done {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.clip-list__status--error {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.clip-list__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.clip-list__actions button {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.clip-list__actions button:hover {
+  background: #f0f0f0;
+}
+
+.clip-list__actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clip-list__actions a {
+  padding: 0.25rem 0.6rem;
+  border-radius: 3px;
+  background: #4caf50;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.8rem;
+}
+
+.clip-list__actions a:hover {
+  background: #388e3c;
+}

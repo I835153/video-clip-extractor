@@ -17,3 +17,9 @@ h1 {
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
 }
+
+.app__error {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}

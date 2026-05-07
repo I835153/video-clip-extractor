@@ -1,0 +1,40 @@
+.timeline {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.timeline__clip {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.timeline__clip-label {
+  font-size: 0.7rem;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.timeline__playhead {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #f44336;
+  transform: translateX(-1px);
+  pointer-events: none;
+}
