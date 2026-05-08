@@ -6,6 +6,7 @@ export interface Clip {
   status: 'pending' | 'exporting' | 'done' | 'error';
   outputUrl?: string;
   error?: string;
+  thumbnailUrl?: string;
 }
 
 export interface VideoInfo {

@@ -13,6 +13,11 @@ interface FFmpegHandle {
     sourceWritten?: boolean
   ) => Promise<Blob>;
   cleanup: () => Promise<void>;
+  extractFrame: (
+    file: File,
+    time: number,
+    sourceWritten?: boolean
+  ) => Promise<Blob>;
 }
 
 export function useClipManager(
@@ -52,7 +57,22 @@ export function useClipManager(
     setClips((prev) => [...prev, newClip]);
     setClipStart(null);
     setError(null);
-  }, [clipStart, currentTime, duration, clips.length]);
+
+    if (ffmpeg && ffmpeg.loaded && videoFile) {
+      const midpoint = (newClip.startTime + newClip.endTime) / 2;
+      ffmpeg
+        .extractFrame(videoFile, midpoint)
+        .then((blob) => {
+          const url = URL.createObjectURL(blob);
+          setClips((prev) =>
+            prev.map((c) =>
+              c.id === newClip.id ? { ...c, thumbnailUrl: url } : c
+            )
+          );
+        })
+        .catch((err) => console.warn('Thumbnail generation failed:', err));
+    }
+  }, [clipStart, currentTime, duration, clips.length, ffmpeg, videoFile]);
 
   const handleUpdateClip = useCallback((id: string, updates: Partial<Clip>) => {
     setClips((prev) =>
@@ -65,6 +85,9 @@ export function useClipManager(
       const clip = prev.find((c) => c.id === id);
       if (clip?.outputUrl) {
         URL.revokeObjectURL(clip.outputUrl);
+      }
+      if (clip?.thumbnailUrl) {
+        URL.revokeObjectURL(clip.thumbnailUrl);
       }
       return prev.filter((c) => c.id !== id);
     });
@@ -204,6 +227,63 @@ export function useClipManager(
     return ids;
   }, [clips]);
 
+  const handleGenerateThumbnail = useCallback(
+    async (clipId: string) => {
+      if (!ffmpeg || !ffmpeg.loaded || !videoFile) return;
+
+      const clip = clips.find((c) => c.id === clipId);
+      if (!clip) return;
+
+      const midpoint = (clip.startTime + clip.endTime) / 2;
+
+      try {
+        const blob = await ffmpeg.extractFrame(videoFile, midpoint);
+        const url = URL.createObjectURL(blob);
+        setClips((prev) =>
+          prev.map((c) => {
+            if (c.id !== clipId) return c;
+            if (c.thumbnailUrl) URL.revokeObjectURL(c.thumbnailUrl);
+            return { ...c, thumbnailUrl: url };
+          })
+        );
+      } catch (err) {
+        console.warn('Thumbnail generation failed:', err);
+      }
+    },
+    [ffmpeg, videoFile, clips]
+  );
+
+  const handleSetThumbnailFromVideo = useCallback(
+    (clipId: string) => {
+      if (!videoRef?.current) return;
+
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          setClips((prev) =>
+            prev.map((c) => {
+              if (c.id !== clipId) return c;
+              if (c.thumbnailUrl) URL.revokeObjectURL(c.thumbnailUrl);
+              return { ...c, thumbnailUrl: url };
+            })
+          );
+        },
+        'image/jpeg',
+        0.85
+      );
+    },
+    [videoRef]
+  );
+
   return {
     clips,
     clipStart,
@@ -216,5 +296,7 @@ export function useClipManager(
     handleExportClip,
     handleExportAll,
     handlePreviewClip,
+    handleGenerateThumbnail,
+    handleSetThumbnailFromVideo,
   };
 }

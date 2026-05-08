@@ -10,14 +10,14 @@ const baseProps = {
 };
 
 describe('ExportPanel', () => {
-  it('shows "Load FFmpeg Engine" button when not loaded', () => {
+  it('shows "Prepare Export Engine" button when not loaded', () => {
     render(<ExportPanel {...baseProps} />);
-    expect(screen.getByText('Load FFmpeg Engine')).toBeInTheDocument();
+    expect(screen.getByText('Prepare Export Engine')).toBeInTheDocument();
   });
 
   it('shows loading message when ffmpegLoading is true', () => {
     render(<ExportPanel {...baseProps} ffmpegLoading={true} />);
-    expect(screen.getByText('Loading FFmpeg engine…')).toBeInTheDocument();
+    expect(screen.getByText('Preparing export engine…')).toBeInTheDocument();
   });
 
   it('shows "Export All Clips" button when loaded', () => {

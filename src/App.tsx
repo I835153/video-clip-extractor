@@ -32,6 +32,7 @@ function App() {
     handleExportClip,
     handleExportAll,
     handlePreviewClip,
+    handleSetThumbnailFromVideo,
   } = useClipManager(currentTime, duration, video?.file, videoRef, ffmpeg);
 
   function handleStep(seconds: number) {
@@ -111,6 +112,13 @@ function App() {
             <kbd>→</kbd> ±0.1s
           </p>
           {error && <p className="app__error">{error}</p>}
+          <ExportPanel
+            clips={clips}
+            ffmpegLoaded={ffmpeg.loaded}
+            ffmpegLoading={ffmpeg.loading}
+            onExportAll={handleExportAll}
+            onLoadFFmpeg={ffmpeg.load}
+          />
           <ClipList
             clips={clips}
             overlappingClipIds={overlappingClipIds}
@@ -118,13 +126,7 @@ function App() {
             onDeleteClip={handleDeleteClip}
             onExportClip={handleExportClip}
             onPreviewClip={handlePreviewClip}
-          />
-          <ExportPanel
-            clips={clips}
-            ffmpegLoaded={ffmpeg.loaded}
-            ffmpegLoading={ffmpeg.loading}
-            onExportAll={handleExportAll}
-            onLoadFFmpeg={ffmpeg.load}
+            onSetThumbnail={handleSetThumbnailFromVideo}
           />
         </>
       )}

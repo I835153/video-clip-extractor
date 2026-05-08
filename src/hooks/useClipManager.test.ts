@@ -150,6 +150,9 @@ describe('useClipManager', () => {
         .fn()
         .mockResolvedValue(new Blob(['video'], { type: 'video/mp4' })),
       cleanup: vi.fn().mockResolvedValue(undefined),
+      extractFrame: vi
+        .fn()
+        .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
     };
 
     it('exports a clip and sets status to done', async () => {
@@ -256,6 +259,9 @@ describe('useClipManager', () => {
         .fn()
         .mockResolvedValue(new Blob(['video'], { type: 'video/mp4' })),
       cleanup: vi.fn().mockResolvedValue(undefined),
+      extractFrame: vi
+        .fn()
+        .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
     };
 
     it('exports all pending clips and calls cleanup', async () => {
@@ -407,6 +413,9 @@ describe('useClipManager', () => {
         load: vi.fn().mockResolvedValue(undefined),
         trim: failOnSecond,
         cleanup: vi.fn().mockResolvedValue(undefined),
+        extractFrame: vi
+          .fn()
+          .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
       };
 
       const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
@@ -465,6 +474,9 @@ describe('useClipManager', () => {
         .fn()
         .mockResolvedValue(new Blob(['video'], { type: 'video/mp4' })),
       cleanup: vi.fn().mockResolvedValue(undefined),
+      extractFrame: vi
+        .fn()
+        .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
     };
 
     let currentTime = 5;
@@ -494,6 +506,129 @@ describe('useClipManager', () => {
     });
 
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/fake');
+    revokeObjectURL.mockRestore();
+  });
+
+  it('auto-generates thumbnail on handleMarkEnd when ffmpeg loaded', async () => {
+    const mockFFmpeg = {
+      loaded: true,
+      loading: false,
+      load: vi.fn().mockResolvedValue(undefined),
+      trim: vi
+        .fn()
+        .mockResolvedValue(new Blob(['video'], { type: 'video/mp4' })),
+      cleanup: vi.fn().mockResolvedValue(undefined),
+      extractFrame: vi
+        .fn()
+        .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
+    };
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60, videoFile, undefined, mockFFmpeg)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    // Wait for the fire-and-forget extractFrame promise
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(mockFFmpeg.extractFrame).toHaveBeenCalledWith(videoFile, 10);
+    expect(result.current.clips[0].thumbnailUrl).toBeTruthy();
+  });
+
+  it('handleSetThumbnailFromVideo captures canvas frame', async () => {
+    const mockBlob = new Blob(['canvas-img'], { type: 'image/jpeg' });
+    const mockCtx = { drawImage: vi.fn() };
+    const mockCanvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn().mockReturnValue(mockCtx),
+      toBlob: vi.fn().mockImplementation((cb: BlobCallback) => {
+        cb(mockBlob);
+      }),
+    };
+    const origCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      if (tag === 'canvas') return mockCanvas as unknown as HTMLCanvasElement;
+      return origCreateElement(tag);
+    });
+
+    const mockVideo = {
+      currentTime: 0,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      play: vi.fn(),
+      pause: vi.fn(),
+    } as unknown as HTMLVideoElement;
+    const videoRef = { current: mockVideo };
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60, videoFile, videoRef)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    const clipId = result.current.clips[0].id;
+    act(() => {
+      result.current.handleSetThumbnailFromVideo(clipId);
+    });
+
+    expect(mockCanvas.getContext).toHaveBeenCalledWith('2d');
+    expect(mockCtx.drawImage).toHaveBeenCalledWith(mockVideo, 0, 0);
+    expect(result.current.clips[0].thumbnailUrl).toBeTruthy();
+
+    vi.restoreAllMocks();
+  });
+
+  it('handleDeleteClip revokes thumbnailUrl', () => {
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL');
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60, videoFile)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    const clipId = result.current.clips[0].id;
+    act(() => {
+      result.current.handleUpdateClip(clipId, {
+        thumbnailUrl: 'blob:http://localhost/thumb',
+      } as Partial<Clip>);
+    });
+
+    act(() => {
+      result.current.handleDeleteClip(clipId);
+    });
+
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/thumb');
     revokeObjectURL.mockRestore();
   });
 });

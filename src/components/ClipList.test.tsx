@@ -26,6 +26,7 @@ const defaultProps = {
   onDeleteClip: vi.fn(),
   onExportClip: vi.fn(),
   onPreviewClip: vi.fn(),
+  onSetThumbnail: vi.fn(),
 };
 
 describe('ClipList', () => {
@@ -131,5 +132,36 @@ describe('ClipList', () => {
     const downloadLink = screen.getByText('Download');
     fireEvent.click(downloadLink);
     expect(screen.getByText('Re-download')).toBeInTheDocument();
+  });
+
+  it('shows thumbnail image when clip has thumbnailUrl', () => {
+    const clipsWithThumb: Clip[] = [
+      {
+        id: 'clip-t1',
+        label: 'Thumb Clip',
+        startTime: 0,
+        endTime: 10,
+        status: 'pending',
+        thumbnailUrl: 'blob:http://localhost/thumb1',
+      },
+    ];
+    render(<ClipList {...defaultProps} clips={clipsWithThumb} />);
+    const img = screen.getByAltText('Thumb Clip thumbnail');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'blob:http://localhost/thumb1');
+  });
+
+  it('shows placeholder when clip has no thumbnailUrl', () => {
+    render(<ClipList {...defaultProps} />);
+    const placeholders = screen.getAllByText('—');
+    expect(placeholders.length).toBeGreaterThan(0);
+  });
+
+  it('Set Thumbnail button calls onSetThumbnail', () => {
+    const onSetThumbnail = vi.fn();
+    render(<ClipList {...defaultProps} onSetThumbnail={onSetThumbnail} />);
+    const setThumbButtons = screen.getAllByText('Set Thumbnail');
+    fireEvent.click(setThumbButtons[0]);
+    expect(onSetThumbnail).toHaveBeenCalledWith('clip-1');
   });
 });

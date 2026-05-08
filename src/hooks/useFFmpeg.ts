@@ -54,16 +54,16 @@ export function useFFmpeg() {
       }
 
       await ffmpeg.exec([
+        '-i',
+        'input.mp4',
         '-ss',
         startTime.toString(),
         '-to',
         endTime.toString(),
-        '-i',
-        'input.mp4',
-        '-c',
-        'copy',
-        '-avoid_negative_ts',
-        'make_zero',
+        '-c:v',
+        'libx264',
+        '-c:a',
+        'aac',
         'output.mp4',
       ]);
 
@@ -85,5 +85,39 @@ export function useFFmpeg() {
     }
   }, []);
 
-  return { loaded, loading, load, trim, cleanup };
+  const extractFrame = useCallback(
+    async (
+      file: File,
+      time: number,
+      sourceWritten?: boolean
+    ): Promise<Blob> => {
+      const ffmpeg = ffmpegRef.current;
+      if (!ffmpeg) throw new Error('FFmpeg not loaded');
+
+      if (!sourceWritten) {
+        const fileData = await fetchFile(file);
+        await ffmpeg.writeFile('input.mp4', fileData);
+      }
+
+      await ffmpeg.exec([
+        '-ss',
+        time.toString(),
+        '-i',
+        'input.mp4',
+        '-frames:v',
+        '1',
+        '-q:v',
+        '2',
+        'frame.jpg',
+      ]);
+
+      const data = await ffmpeg.readFile('frame.jpg');
+      await ffmpeg.deleteFile('frame.jpg');
+
+      return new Blob([data], { type: 'image/jpeg' });
+    },
+    []
+  );
+
+  return { loaded, loading, load, trim, cleanup, extractFrame };
 }

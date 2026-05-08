@@ -28,6 +28,8 @@ vi.mock('./hooks/useClipManager', () => ({
     handleExportClip: vi.fn(),
     handleExportAll: vi.fn(),
     handlePreviewClip: vi.fn(),
+    handleGenerateThumbnail: vi.fn(),
+    handleSetThumbnailFromVideo: vi.fn(),
   }),
 }));
 
@@ -38,6 +40,7 @@ vi.mock('./hooks/useFFmpeg', () => ({
     load: vi.fn(),
     trim: vi.fn(),
     cleanup: vi.fn(),
+    extractFrame: vi.fn(),
   }),
 }));
 

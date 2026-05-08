@@ -10,6 +10,7 @@ interface ClipListProps {
   onDeleteClip: (id: string) => void;
   onExportClip: (id: string) => void;
   onPreviewClip: (id: string) => void;
+  onSetThumbnail: (id: string) => void;
 }
 
 export default function ClipList({
@@ -19,6 +20,7 @@ export default function ClipList({
   onDeleteClip,
   onExportClip,
   onPreviewClip,
+  onSetThumbnail,
 }: ClipListProps) {
   if (clips.length === 0) {
     return (
@@ -39,6 +41,7 @@ export default function ClipList({
               <th>Start</th>
               <th>End</th>
               <th>Duration</th>
+              <th>Thumb</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -53,6 +56,7 @@ export default function ClipList({
                 onDeleteClip={onDeleteClip}
                 onExportClip={onExportClip}
                 onPreviewClip={onPreviewClip}
+                onSetThumbnail={onSetThumbnail}
               />
             ))}
           </tbody>
@@ -69,6 +73,7 @@ interface ClipRowProps {
   onDeleteClip: (id: string) => void;
   onExportClip: (id: string) => void;
   onPreviewClip: (id: string) => void;
+  onSetThumbnail: (id: string) => void;
 }
 
 function ClipRow({
@@ -78,6 +83,7 @@ function ClipRow({
   onDeleteClip,
   onExportClip,
   onPreviewClip,
+  onSetThumbnail,
 }: ClipRowProps) {
   const [editStart, setEditStart] = useState(formatTime(clip.startTime));
   const [editEnd, setEditEnd] = useState(formatTime(clip.endTime));
@@ -134,6 +140,17 @@ function ClipRow({
       </td>
       <td className="clip-list__duration">{formatTime(duration)}</td>
       <td>
+        {clip.thumbnailUrl ? (
+          <img
+            src={clip.thumbnailUrl}
+            alt={`${clip.label} thumbnail`}
+            className="clip-list__thumb"
+          />
+        ) : (
+          <div className="clip-list__thumb-placeholder">—</div>
+        )}
+      </td>
+      <td>
         <span className={`clip-list__status clip-list__status--${clip.status}`}>
           {clip.status}
         </span>
@@ -148,6 +165,7 @@ function ClipRow({
       </td>
       <td className="clip-list__actions">
         <button onClick={() => onPreviewClip(clip.id)}>Preview</button>
+        <button onClick={() => onSetThumbnail(clip.id)}>Set Thumbnail</button>
         <button
           onClick={() => onExportClip(clip.id)}
           disabled={clip.status === 'exporting'}

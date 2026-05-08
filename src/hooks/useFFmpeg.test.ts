@@ -79,16 +79,16 @@ describe('useFFmpeg', () => {
       expect.any(Uint8Array)
     );
     expect(mockExec).toHaveBeenCalledWith([
+      '-i',
+      'input.mp4',
       '-ss',
       '5',
       '-to',
       '15',
-      '-i',
-      'input.mp4',
-      '-c',
-      'copy',
-      '-avoid_negative_ts',
-      'make_zero',
+      '-c:v',
+      'libx264',
+      '-c:a',
+      'aac',
       'output.mp4',
     ]);
     expect(mockReadFile).toHaveBeenCalledWith('output.mp4');
@@ -153,5 +153,65 @@ describe('useFFmpeg', () => {
     await act(async () => {
       await result.current.cleanup(); // should not throw
     });
+  });
+
+  it('extractFrame() extracts a frame and returns a JPEG blob', async () => {
+    const { result } = renderHook(() => useFFmpeg());
+
+    await act(async () => {
+      await result.current.load();
+    });
+
+    const file = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+    let blob: Blob | undefined;
+
+    await act(async () => {
+      blob = await result.current.extractFrame(file, 5);
+    });
+
+    expect(mockExec).toHaveBeenCalledWith([
+      '-ss',
+      '5',
+      '-i',
+      'input.mp4',
+      '-frames:v',
+      '1',
+      '-q:v',
+      '2',
+      'frame.jpg',
+    ]);
+    expect(mockReadFile).toHaveBeenCalledWith('frame.jpg');
+    expect(mockDeleteFile).toHaveBeenCalledWith('frame.jpg');
+    expect(blob).toBeInstanceOf(Blob);
+    expect(blob!.type).toBe('image/jpeg');
+  });
+
+  it('extractFrame() skips writeFile when sourceWritten is true', async () => {
+    const { result } = renderHook(() => useFFmpeg());
+
+    await act(async () => {
+      await result.current.load();
+    });
+
+    mockWriteFile.mockClear();
+    const file = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+
+    await act(async () => {
+      await result.current.extractFrame(file, 3, true);
+    });
+
+    expect(mockWriteFile).not.toHaveBeenCalled();
+  });
+
+  it('extractFrame() throws if FFmpeg not loaded', async () => {
+    const { result } = renderHook(() => useFFmpeg());
+
+    const file = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+
+    await expect(
+      act(async () => {
+        await result.current.extractFrame(file, 0);
+      })
+    ).rejects.toThrow('FFmpeg not loaded');
   });
 });

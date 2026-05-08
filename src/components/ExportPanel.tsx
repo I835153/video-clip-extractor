@@ -25,10 +25,10 @@ export default function ExportPanel({
     return (
       <div className="export-panel">
         <button className="export-panel__load-btn" onClick={onLoadFFmpeg}>
-          Load FFmpeg Engine
+          Prepare Export Engine
         </button>
         <p className="export-panel__note">
-          FFmpeg (~30MB) must be loaded before exporting clips.
+          The export engine (~30MB) must be prepared before exporting clips.
         </p>
       </div>
     );
@@ -37,7 +37,7 @@ export default function ExportPanel({
   if (ffmpegLoading) {
     return (
       <div className="export-panel">
-        <p className="export-panel__loading">Loading FFmpeg engine…</p>
+        <p className="export-panel__loading">Preparing export engine…</p>
       </div>
     );
   }
@@ -45,7 +45,7 @@ export default function ExportPanel({
   return (
     <div className="export-panel">
       <div className="export-panel__header">
-        <span className="export-panel__ready">● Ready</span>
+        <span className="export-panel__ready">● Export engine ready</span>
         <button
           className="export-panel__export-btn"
           onClick={onExportAll}
