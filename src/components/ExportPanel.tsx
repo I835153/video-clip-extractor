@@ -7,6 +7,7 @@ interface ExportPanelProps {
   ffmpegLoading: boolean;
   onExportAll: () => void;
   onLoadFFmpeg: () => void;
+  onDownloadZip: () => void;
 }
 
 export default function ExportPanel({
@@ -15,6 +16,7 @@ export default function ExportPanel({
   ffmpegLoading,
   onExportAll,
   onLoadFFmpeg,
+  onDownloadZip,
 }: ExportPanelProps) {
   const pendingCount = clips.filter((c) => c.status === 'pending').length;
   const exportingCount = clips.filter((c) => c.status === 'exporting').length;
@@ -53,6 +55,11 @@ export default function ExportPanel({
         >
           Export All Clips
         </button>
+        {doneCount > 0 && (
+          <button className="export-panel__export-btn" onClick={onDownloadZip}>
+            Download All as ZIP
+          </button>
+        )}
         {pendingCount > 0 && (
           <span className="export-panel__count">
             {pendingCount} clip{pendingCount !== 1 ? 's' : ''} ready to export

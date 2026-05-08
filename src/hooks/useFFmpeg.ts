@@ -4,6 +4,9 @@ import { toBlobURL, fetchFile } from '@ffmpeg/util';
 
 export function useFFmpeg() {
   const ffmpegRef = useRef<FFmpeg | null>(null);
+  const progressHandlerRef = useRef<
+    (({ progress }: { progress: number }) => void) | null
+  >(null);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -119,5 +122,31 @@ export function useFFmpeg() {
     []
   );
 
-  return { loaded, loading, load, trim, cleanup, extractFrame };
+  const setProgressCallback = useCallback(
+    (callback: ((ratio: number) => void) | null) => {
+      const ffmpeg = ffmpegRef.current;
+      if (!ffmpeg) return;
+      if (progressHandlerRef.current) {
+        ffmpeg.off('progress', progressHandlerRef.current);
+        progressHandlerRef.current = null;
+      }
+      if (callback) {
+        const handler = ({ progress }: { progress: number }) =>
+          callback(progress);
+        progressHandlerRef.current = handler;
+        ffmpeg.on('progress', handler);
+      }
+    },
+    []
+  );
+
+  return {
+    loaded,
+    loading,
+    load,
+    trim,
+    cleanup,
+    extractFrame,
+    setProgressCallback,
+  };
 }

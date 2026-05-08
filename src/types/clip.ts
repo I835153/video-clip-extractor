@@ -4,6 +4,7 @@ export interface Clip {
   startTime: number;
   endTime: number;
   status: 'pending' | 'exporting' | 'done' | 'error';
+  progress?: number;
   outputUrl?: string;
   error?: string;
   thumbnailUrl?: string;

@@ -18,6 +18,28 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
+.app__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.app__load-new-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.app__load-new-btn:hover {
+  background: #f0f0f0;
+  border-color: #999;
+}
+
 .app__error {
   color: #d32f2f;
   font-size: 0.9rem;

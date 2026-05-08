@@ -95,4 +95,78 @@ describe('useVideoPlayer', () => {
       expect.any(Function)
     );
   });
+
+  it('fires event handlers to update state', () => {
+    const handlers: Record<string, Function> = {};
+    const mockVideo = {
+      currentTime: 0,
+      duration: 60,
+      readyState: 0,
+      addEventListener: vi.fn((event: string, handler: Function) => {
+        handlers[event] = handler;
+      }),
+      removeEventListener: vi.fn(),
+    } as unknown as HTMLVideoElement;
+    const ref = { current: mockVideo };
+    const { result } = renderHook(() => useVideoPlayer(ref, 'test.mp4'));
+
+    // Fire timeupdate
+    Object.defineProperty(mockVideo, 'currentTime', {
+      value: 25,
+      writable: true,
+    });
+    act(() => {
+      handlers['timeupdate']();
+    });
+    expect(result.current.currentTime).toBe(25);
+
+    // Fire loadedmetadata
+    Object.defineProperty(mockVideo, 'duration', {
+      value: 120,
+      writable: true,
+    });
+    act(() => {
+      handlers['loadedmetadata']();
+    });
+    expect(result.current.duration).toBe(120);
+
+    // Fire play
+    act(() => {
+      handlers['play']();
+    });
+    expect(result.current.isPlaying).toBe(true);
+
+    // Fire pause
+    act(() => {
+      handlers['pause']();
+    });
+    expect(result.current.isPlaying).toBe(false);
+  });
+
+  it('seek does nothing when video ref is null', () => {
+    const ref = { current: null };
+    const { result } = renderHook(() => useVideoPlayer(ref));
+    act(() => {
+      result.current.seek(5);
+    });
+    expect(result.current.currentTime).toBe(0);
+  });
+
+  it('stepForward does nothing when video ref is null', () => {
+    const ref = { current: null };
+    const { result } = renderHook(() => useVideoPlayer(ref));
+    act(() => {
+      result.current.stepForward(1);
+    });
+    expect(result.current.currentTime).toBe(0);
+  });
+
+  it('stepBackward does nothing when video ref is null', () => {
+    const ref = { current: null };
+    const { result } = renderHook(() => useVideoPlayer(ref));
+    act(() => {
+      result.current.stepBackward(1);
+    });
+    expect(result.current.currentTime).toBe(0);
+  });
 });

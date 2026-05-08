@@ -214,4 +214,31 @@ describe('useFFmpeg', () => {
       })
     ).rejects.toThrow('FFmpeg not loaded');
   });
+
+  it('load() does nothing if already loaded', async () => {
+    const { result } = renderHook(() => useFFmpeg());
+
+    await act(async () => {
+      await result.current.load();
+    });
+    expect(result.current.loaded).toBe(true);
+
+    mockLoad.mockClear();
+    await act(async () => {
+      await result.current.load();
+    });
+    // Should not call FFmpeg.load() again
+    expect(mockLoad).not.toHaveBeenCalled();
+  });
+
+  it('setProgressCallback does nothing if FFmpeg not loaded', () => {
+    const { result } = renderHook(() => useFFmpeg());
+    // Should not throw
+    act(() => {
+      result.current.setProgressCallback(() => {});
+    });
+    act(() => {
+      result.current.setProgressCallback(null);
+    });
+  });
 });

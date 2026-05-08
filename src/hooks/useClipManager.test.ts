@@ -3,6 +3,10 @@ import { useClipManager } from './useClipManager';
 import { Clip } from '../types/clip';
 
 describe('useClipManager', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('has correct initial state', () => {
     const { result } = renderHook(() => useClipManager(0, 60));
     expect(result.current.clips).toEqual([]);
@@ -153,6 +157,7 @@ describe('useClipManager', () => {
       extractFrame: vi
         .fn()
         .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
+      setProgressCallback: vi.fn(),
     };
 
     it('exports a clip and sets status to done', async () => {
@@ -262,6 +267,7 @@ describe('useClipManager', () => {
       extractFrame: vi
         .fn()
         .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
+      setProgressCallback: vi.fn(),
     };
 
     it('exports all pending clips and calls cleanup', async () => {
@@ -416,6 +422,7 @@ describe('useClipManager', () => {
         extractFrame: vi
           .fn()
           .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
+        setProgressCallback: vi.fn(),
       };
 
       const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
@@ -477,6 +484,7 @@ describe('useClipManager', () => {
       extractFrame: vi
         .fn()
         .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
+      setProgressCallback: vi.fn(),
     };
 
     let currentTime = 5;
@@ -521,6 +529,7 @@ describe('useClipManager', () => {
       extractFrame: vi
         .fn()
         .mockResolvedValue(new Blob(['img'], { type: 'image/jpeg' })),
+      setProgressCallback: vi.fn(),
     };
     const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
     let currentTime = 5;
@@ -630,5 +639,207 @@ describe('useClipManager', () => {
 
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/thumb');
     revokeObjectURL.mockRestore();
+  });
+
+  it('resetClips clears all clips and revokes URLs', () => {
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL');
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60, videoFile)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    const clipId = result.current.clips[0].id;
+    act(() => {
+      result.current.handleUpdateClip(clipId, {
+        outputUrl: 'blob:http://localhost/out',
+        thumbnailUrl: 'blob:http://localhost/thumb2',
+      } as Partial<Clip>);
+    });
+
+    act(() => {
+      result.current.resetClips();
+    });
+
+    expect(result.current.clips).toHaveLength(0);
+    expect(result.current.clipStart).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/out');
+    expect(revokeObjectURL).toHaveBeenCalledWith(
+      'blob:http://localhost/thumb2'
+    );
+    revokeObjectURL.mockRestore();
+  });
+
+  it('saves clips to localStorage when clips change', () => {
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60, videoFile)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    expect(setItemSpy).toHaveBeenCalledWith(
+      `vce_clips_test.mp4_${videoFile.size}`,
+      expect.stringContaining('"label":"Clip 1"')
+    );
+
+    setItemSpy.mockRestore();
+  });
+
+  it('restores clips from localStorage when videoFile is set', () => {
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+    const key = `vce_clips_test.mp4_${videoFile.size}`;
+    const stored = JSON.stringify([
+      { id: 'r1', label: 'Restored', startTime: 2, endTime: 8 },
+    ]);
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((k: string) =>
+      k === key ? stored : null
+    );
+
+    const { result } = renderHook(() => useClipManager(0, 60, videoFile));
+
+    expect(result.current.clips).toHaveLength(1);
+    expect(result.current.clips[0].label).toBe('Restored');
+    expect(result.current.clips[0].status).toBe('pending');
+
+    vi.restoreAllMocks();
+  });
+
+  it('resetClips clears localStorage', () => {
+    const videoFile = new File(['data'], 'test.mp4', { type: 'video/mp4' });
+    const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem');
+
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60, videoFile)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    act(() => {
+      result.current.resetClips();
+    });
+
+    expect(removeItemSpy).toHaveBeenCalledWith(
+      `vce_clips_test.mp4_${videoFile.size}`
+    );
+
+    removeItemSpy.mockRestore();
+  });
+
+  it('handleGenerateThumbnail does nothing without ffmpeg', async () => {
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    const clipId = result.current.clips[0].id;
+    await act(async () => {
+      await result.current.handleGenerateThumbnail(clipId);
+    });
+    // Should not throw, thumbnailUrl should remain undefined
+    expect(result.current.clips[0].thumbnailUrl).toBeUndefined();
+  });
+
+  it('handleSetThumbnailFromVideo does nothing without videoRef', () => {
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    const clipId = result.current.clips[0].id;
+    act(() => {
+      result.current.handleSetThumbnailFromVideo(clipId);
+    });
+    // Should not throw
+    expect(result.current.clips[0].thumbnailUrl).toBeUndefined();
+  });
+
+  it('does not save to localStorage when no videoFile', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    expect(setItemSpy).not.toHaveBeenCalled();
+    setItemSpy.mockRestore();
+  });
+
+  it('handleDownloadZip does nothing with no done clips', async () => {
+    let currentTime = 5;
+    const { result, rerender } = renderHook(() =>
+      useClipManager(currentTime, 60)
+    );
+
+    act(() => {
+      result.current.handleMarkStart();
+    });
+    currentTime = 15;
+    rerender();
+    act(() => {
+      result.current.handleMarkEnd();
+    });
+
+    // Should not throw — all clips are pending
+    await act(async () => {
+      await result.current.handleDownloadZip();
+    });
   });
 });

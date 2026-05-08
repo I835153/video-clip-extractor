@@ -33,6 +33,8 @@ function App() {
     handleExportAll,
     handlePreviewClip,
     handleSetThumbnailFromVideo,
+    resetClips,
+    handleDownloadZip,
   } = useClipManager(currentTime, duration, video?.file, videoRef, ffmpeg);
 
   function handleStep(seconds: number) {
@@ -41,6 +43,14 @@ function App() {
 
   function handleSeek(time: number) {
     seek(time);
+  }
+
+  function handleLoadNewVideo() {
+    if (video) {
+      URL.revokeObjectURL(video.objectUrl);
+    }
+    resetClips();
+    setVideo(null);
   }
 
   useEffect(() => {
@@ -67,6 +77,14 @@ function App() {
           e.preventDefault();
           handleStep(e.shiftKey ? 0.1 : 1);
           break;
+        case ',':
+          e.preventDefault();
+          handleStep(-1 / 30);
+          break;
+        case '.':
+          e.preventDefault();
+          handleStep(1 / 30);
+          break;
       }
     }
 
@@ -76,7 +94,14 @@ function App() {
 
   return (
     <div className="app">
-      <h1>Video Clip Extractor</h1>
+      <div className="app__header">
+        <h1>Video Clip Extractor</h1>
+        {video && (
+          <button className="app__load-new-btn" onClick={handleLoadNewVideo}>
+            Load Different Video
+          </button>
+        )}
+      </div>
       {!browserSupported ? (
         <p className="app__unsupported">
           Your browser does not support the required features for video
@@ -109,7 +134,7 @@ function App() {
           <p className="app__shortcuts">
             Shortcuts: <kbd>I</kbd> Mark Start · <kbd>O</kbd> Mark End ·{' '}
             <kbd>←</kbd>/<kbd>→</kbd> ±1s · <kbd>Shift</kbd>+<kbd>←</kbd>/
-            <kbd>→</kbd> ±0.1s
+            <kbd>→</kbd> ±0.1s · <kbd>,</kbd>/<kbd>.</kbd> ±1 frame
           </p>
           {error && <p className="app__error">{error}</p>}
           <ExportPanel
@@ -118,6 +143,7 @@ function App() {
             ffmpegLoading={ffmpeg.loading}
             onExportAll={handleExportAll}
             onLoadFFmpeg={ffmpeg.load}
+            onDownloadZip={handleDownloadZip}
           />
           <ClipList
             clips={clips}

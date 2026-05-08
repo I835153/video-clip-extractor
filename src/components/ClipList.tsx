@@ -154,6 +154,19 @@ function ClipRow({
         <span className={`clip-list__status clip-list__status--${clip.status}`}>
           {clip.status}
         </span>
+        {clip.status === 'exporting' && clip.progress !== undefined && (
+          <div className="clip-list__progress">
+            <div className="clip-list__progress-bar">
+              <div
+                className="clip-list__progress-fill"
+                style={{ width: `${Math.round(clip.progress * 100)}%` }}
+              />
+            </div>
+            <span className="clip-list__progress-text">
+              {Math.round(clip.progress * 100)}%
+            </span>
+          </div>
+        )}
         {isOverlapping && (
           <span
             className="clip-list__overlap-warning"

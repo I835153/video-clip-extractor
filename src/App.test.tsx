@@ -30,6 +30,8 @@ vi.mock('./hooks/useClipManager', () => ({
     handlePreviewClip: vi.fn(),
     handleGenerateThumbnail: vi.fn(),
     handleSetThumbnailFromVideo: vi.fn(),
+    resetClips: vi.fn(),
+    handleDownloadZip: vi.fn(),
   }),
 }));
 
@@ -41,6 +43,7 @@ vi.mock('./hooks/useFFmpeg', () => ({
     trim: vi.fn(),
     cleanup: vi.fn(),
     extractFrame: vi.fn(),
+    setProgressCallback: vi.fn(),
   }),
 }));
 
@@ -127,5 +130,56 @@ describe('App', () => {
     render(<App />);
     fireEvent.keyDown(document, { key: 'i' });
     expect(mockHandleMarkStart).not.toHaveBeenCalled();
+  });
+
+  it('shows Load Different Video button when video is loaded', () => {
+    render(<App />);
+
+    const file = new File(['video'], 'test.mp4', { type: 'video/mp4' });
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(screen.getByText('Load Different Video')).toBeInTheDocument();
+  });
+
+  it('clicking Load Different Video returns to upload screen', () => {
+    render(<App />);
+
+    const file = new File(['video'], 'test.mp4', { type: 'video/mp4' });
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+
+    fireEvent.click(screen.getByText('Load Different Video'));
+    expect(screen.getByText(/drag .* drop an mp4 file/i)).toBeInTheDocument();
+  });
+
+  it('comma key steps back one frame', () => {
+    render(<App />);
+
+    const file = new File(['video'], 'test.mp4', { type: 'video/mp4' });
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+
+    fireEvent.keyDown(document, { key: ',' });
+    expect(mockSeek).toHaveBeenCalled();
+  });
+
+  it('period key steps forward one frame', () => {
+    render(<App />);
+
+    const file = new File(['video'], 'test.mp4', { type: 'video/mp4' });
+    const input = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+
+    fireEvent.keyDown(document, { key: '.' });
+    expect(mockSeek).toHaveBeenCalled();
   });
 });

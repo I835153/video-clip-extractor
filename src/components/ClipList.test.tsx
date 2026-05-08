@@ -164,4 +164,59 @@ describe('ClipList', () => {
     fireEvent.click(setThumbButtons[0]);
     expect(onSetThumbnail).toHaveBeenCalledWith('clip-1');
   });
+
+  it('shows progress bar when clip is exporting with progress', () => {
+    const exportingClips: Clip[] = [
+      {
+        id: 'clip-p1',
+        label: 'Progress Clip',
+        startTime: 0,
+        endTime: 10,
+        status: 'exporting',
+        progress: 0.5,
+      },
+    ];
+    render(<ClipList {...defaultProps} clips={exportingClips} />);
+    expect(screen.getByText('50%')).toBeInTheDocument();
+  });
+
+  it('reverts invalid start time on blur', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const startInput = screen.getByDisplayValue('00:05.0');
+    fireEvent.change(startInput, { target: { value: 'invalid' } });
+    fireEvent.blur(startInput);
+    expect(onUpdateClip).not.toHaveBeenCalledWith(
+      'clip-1',
+      expect.objectContaining({ startTime: expect.anything() })
+    );
+    expect(startInput).toHaveValue('00:05.0');
+  });
+
+  it('reverts invalid end time on blur', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const endInput = screen.getByDisplayValue('00:15.0');
+    fireEvent.change(endInput, { target: { value: 'bad' } });
+    fireEvent.blur(endInput);
+    expect(endInput).toHaveValue('00:15.0');
+  });
+
+  it('updates valid start time on blur', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const startInput = screen.getByDisplayValue('00:05.0');
+    fireEvent.change(startInput, { target: { value: '00:10.0' } });
+    fireEvent.blur(startInput);
+    expect(onUpdateClip).toHaveBeenCalledWith('clip-1', { startTime: 10 });
+  });
+
+  it('updates valid end time on blur', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const endInput = screen.getByDisplayValue('00:15.0');
+    fireEvent.change(endInput, { target: { value: '00:20.0' } });
+    fireEvent.blur(endInput);
+    expect(onUpdateClip).toHaveBeenCalledWith('clip-1', { endTime: 20 });
+  });
 });

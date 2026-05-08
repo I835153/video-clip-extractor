@@ -7,6 +7,7 @@ const baseProps = {
   ffmpegLoading: false,
   onExportAll: vi.fn(),
   onLoadFFmpeg: vi.fn(),
+  onDownloadZip: vi.fn(),
 };
 
 describe('ExportPanel', () => {
@@ -131,5 +132,34 @@ describe('ExportPanel', () => {
     ];
     render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
     expect(screen.getByText('Export All Clips')).toBeDisabled();
+  });
+
+  it('shows "Download All as ZIP" button when done clips exist', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'done' as const,
+        outputUrl: 'blob:x',
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.getByText('Download All as ZIP')).toBeInTheDocument();
+  });
+
+  it('hides "Download All as ZIP" button when no done clips', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'pending' as const,
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.queryByText('Download All as ZIP')).not.toBeInTheDocument();
   });
 });

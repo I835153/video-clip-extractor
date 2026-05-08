@@ -49,4 +49,15 @@ describe('ClipMarker', () => {
     fireEvent.click(screen.getByText('+1s'));
     expect(onStep).toHaveBeenCalledWith(1);
   });
+
+  it('frame step buttons call onStep with 1/30', () => {
+    const onStep = vi.fn();
+    render(<ClipMarker {...defaultProps} onStep={onStep} />);
+
+    fireEvent.click(screen.getByText('|◀'));
+    expect(onStep).toHaveBeenLastCalledWith(expect.closeTo(-1 / 30, 10));
+
+    fireEvent.click(screen.getByText('▶|'));
+    expect(onStep).toHaveBeenLastCalledWith(expect.closeTo(1 / 30, 10));
+  });
 });

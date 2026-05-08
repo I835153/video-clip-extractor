@@ -21,10 +21,16 @@ export default function ClipMarker({
     <div className="clip-marker">
       <div className="clip-marker__time">{formatTime(currentTime)}</div>
       <div className="clip-marker__steps">
+        <button onClick={() => onStep(-1 / 30)} title="Back 1 frame">
+          |◀
+        </button>
         <button onClick={() => onStep(-1)}>−1s</button>
         <button onClick={() => onStep(-0.1)}>−0.1s</button>
         <button onClick={() => onStep(0.1)}>+0.1s</button>
         <button onClick={() => onStep(1)}>+1s</button>
+        <button onClick={() => onStep(1 / 30)} title="Forward 1 frame">
+          ▶|
+        </button>
       </div>
       <div className="clip-marker__marks">
         <button onClick={onMarkStart}>Mark Start</button>
