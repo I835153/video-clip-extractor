@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { Clip } from '../types/clip';
-import { validateClip } from '../utils/validateClip';
+import { validateClip, findOverlaps } from '../utils/validateClip';
 
 interface FFmpegHandle {
   loaded: boolean;
@@ -10,7 +10,7 @@ interface FFmpegHandle {
     file: File,
     startTime: number,
     endTime: number,
-    sourceWritten?: boolean,
+    sourceWritten?: boolean
   ) => Promise<Blob>;
   cleanup: () => Promise<void>;
 }
@@ -20,7 +20,7 @@ export function useClipManager(
   duration: number,
   videoFile?: File | null,
   videoRef?: React.RefObject<HTMLVideoElement | null>,
-  ffmpeg?: FFmpegHandle,
+  ffmpeg?: FFmpegHandle
 ) {
   const [clips, setClips] = useState<Clip[]>([]);
   const [clipStart, setClipStart] = useState<number | null>(null);
@@ -54,14 +54,11 @@ export function useClipManager(
     setError(null);
   }, [clipStart, currentTime, duration, clips.length]);
 
-  const handleUpdateClip = useCallback(
-    (id: string, updates: Partial<Clip>) => {
-      setClips((prev) =>
-        prev.map((clip) => (clip.id === id ? { ...clip, ...updates } : clip))
-      );
-    },
-    []
-  );
+  const handleUpdateClip = useCallback((id: string, updates: Partial<Clip>) => {
+    setClips((prev) =>
+      prev.map((clip) => (clip.id === id ? { ...clip, ...updates } : clip))
+    );
+  }, []);
 
   const handleDeleteClip = useCallback((id: string) => {
     setClips((prev) => {
@@ -78,7 +75,9 @@ export function useClipManager(
       if (!videoFile || !ffmpeg) return;
 
       setClips((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: 'exporting' as const } : c)),
+        prev.map((c) =>
+          c.id === id ? { ...c, status: 'exporting' as const } : c
+        )
       );
 
       try {
@@ -92,8 +91,8 @@ export function useClipManager(
 
         setClips((prev) =>
           prev.map((c) =>
-            c.id === id ? { ...c, status: 'done' as const, outputUrl } : c,
-          ),
+            c.id === id ? { ...c, status: 'done' as const, outputUrl } : c
+          )
         );
       } catch (err) {
         setClips((prev) =>
@@ -104,12 +103,12 @@ export function useClipManager(
                   status: 'error' as const,
                   error: err instanceof Error ? err.message : 'Export failed',
                 }
-              : c,
-          ),
+              : c
+          )
         );
       }
     },
-    [videoFile, ffmpeg, clips],
+    [videoFile, ffmpeg, clips]
   );
 
   const handleExportAll = useCallback(async () => {
@@ -124,8 +123,8 @@ export function useClipManager(
 
         setClips((prev) =>
           prev.map((c) =>
-            c.id === clip.id ? { ...c, status: 'exporting' as const } : c,
-          ),
+            c.id === clip.id ? { ...c, status: 'exporting' as const } : c
+          )
         );
 
         try {
@@ -133,15 +132,15 @@ export function useClipManager(
             videoFile,
             clip.startTime,
             clip.endTime,
-            i > 0,
+            i > 0
           );
           const outputUrl = URL.createObjectURL(blob);
           setClips((prev) =>
             prev.map((c) =>
               c.id === clip.id
                 ? { ...c, status: 'done' as const, outputUrl }
-                : c,
-            ),
+                : c
+            )
           );
         } catch (err) {
           setClips((prev) =>
@@ -150,11 +149,10 @@ export function useClipManager(
                 ? {
                     ...c,
                     status: 'error' as const,
-                    error:
-                      err instanceof Error ? err.message : 'Export failed',
+                    error: err instanceof Error ? err.message : 'Export failed',
                   }
-                : c,
-            ),
+                : c
+            )
           );
         }
       }
@@ -193,13 +191,24 @@ export function useClipManager(
 
       previewRafRef.current = requestAnimationFrame(checkEnd);
     },
-    [clips, videoRef],
+    [clips, videoRef]
   );
+
+  const overlappingClipIds = useMemo(() => {
+    const pairs = findOverlaps(clips);
+    const ids = new Set<string>();
+    for (const [a, b] of pairs) {
+      ids.add(a);
+      ids.add(b);
+    }
+    return ids;
+  }, [clips]);
 
   return {
     clips,
     clipStart,
     error,
+    overlappingClipIds,
     handleMarkStart,
     handleMarkEnd,
     handleUpdateClip,

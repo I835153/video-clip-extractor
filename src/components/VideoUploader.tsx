@@ -9,6 +9,7 @@ interface VideoUploaderProps {
 export default function VideoUploader({ onVideoSelected }: VideoUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sizeWarning, setSizeWarning] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previousUrlRef = useRef<string | null>(null);
 
@@ -19,6 +20,14 @@ export default function VideoUploader({ onVideoSelected }: VideoUploaderProps) {
     }
 
     setError(null);
+
+    if (file.size > 300 * 1024 * 1024) {
+      setSizeWarning(
+        'Warning: This file is over 300MB. Large files use approximately 2× their size in browser memory and may cause performance issues.'
+      );
+    } else {
+      setSizeWarning(null);
+    }
 
     if (previousUrlRef.current) {
       URL.revokeObjectURL(previousUrlRef.current);
@@ -90,6 +99,7 @@ export default function VideoUploader({ onVideoSelected }: VideoUploaderProps) {
         />
       </div>
       {error && <p className="upload-error">{error}</p>}
+      {sizeWarning && <p className="upload-warning">{sizeWarning}</p>}
     </div>
   );
 }

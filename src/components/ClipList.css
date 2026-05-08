@@ -2,6 +2,10 @@
   margin-top: 1rem;
 }
 
+.clip-list__scroll {
+  overflow-x: auto;
+}
+
 .clip-list__empty {
   color: #999;
   text-align: center;
@@ -119,4 +123,9 @@
 
 .clip-list__download--done:hover {
   background: #546e7a !important;
+}
+
+.clip-list__overlap-warning {
+  margin-left: 0.4rem;
+  cursor: help;
 }

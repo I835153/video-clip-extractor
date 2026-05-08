@@ -60,4 +60,76 @@ describe('ClipList', () => {
     expect(downloadLink).toBeInTheDocument();
     expect(downloadLink).toHaveAttribute('href', 'blob:http://localhost/test');
   });
+
+  it('export button calls onExportClip', () => {
+    const onExportClip = vi.fn();
+    render(<ClipList {...defaultProps} onExportClip={onExportClip} />);
+    const exportButtons = screen.getAllByText('Export');
+    fireEvent.click(exportButtons[0]);
+    expect(onExportClip).toHaveBeenCalledWith('clip-1');
+  });
+
+  it('preview button calls onPreviewClip', () => {
+    const onPreviewClip = vi.fn();
+    render(<ClipList {...defaultProps} onPreviewClip={onPreviewClip} />);
+    const previewButtons = screen.getAllByText('Preview');
+    fireEvent.click(previewButtons[0]);
+    expect(onPreviewClip).toHaveBeenCalledWith('clip-1');
+  });
+
+  it('label input calls onUpdateClip on change', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const labelInput = screen.getByDisplayValue('Clip 1');
+    fireEvent.change(labelInput, { target: { value: 'New Label' } });
+    expect(onUpdateClip).toHaveBeenCalledWith('clip-1', { label: 'New Label' });
+  });
+
+  it('time input updates on blur with valid time', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const startInput = screen.getByDisplayValue('00:05.0');
+    fireEvent.change(startInput, { target: { value: '00:10.0' } });
+    fireEvent.blur(startInput);
+    expect(onUpdateClip).toHaveBeenCalledWith('clip-1', { startTime: 10 });
+  });
+
+  it('time input reverts on blur with invalid time', () => {
+    const onUpdateClip = vi.fn();
+    render(<ClipList {...defaultProps} onUpdateClip={onUpdateClip} />);
+    const startInput = screen.getByDisplayValue('00:05.0');
+    fireEvent.change(startInput, { target: { value: 'invalid' } });
+    fireEvent.blur(startInput);
+    expect(onUpdateClip).not.toHaveBeenCalled();
+  });
+
+  it('shows overlap warning when clip is in overlappingClipIds', () => {
+    const overlapping = new Set(['clip-1']);
+    render(<ClipList {...defaultProps} overlappingClipIds={overlapping} />);
+    expect(
+      screen.getByTitle('This clip overlaps with another clip')
+    ).toBeInTheDocument();
+  });
+
+  it('shows error icon when clip has error status', () => {
+    const errorClips: Clip[] = [
+      {
+        id: 'e1',
+        label: 'Error Clip',
+        startTime: 0,
+        endTime: 5,
+        status: 'error',
+        error: 'Failed',
+      },
+    ];
+    render(<ClipList {...defaultProps} clips={errorClips} />);
+    expect(screen.getByTitle('Failed')).toBeInTheDocument();
+  });
+
+  it('download link changes to Re-download after click', () => {
+    render(<ClipList {...defaultProps} />);
+    const downloadLink = screen.getByText('Download');
+    fireEvent.click(downloadLink);
+    expect(screen.getByText('Re-download')).toBeInTheDocument();
+  });
 });

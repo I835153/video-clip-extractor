@@ -7,9 +7,9 @@ body {
 }
 
 .app {
-  max-width: 960px;
+  max-width: 1024px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem 16px;
   text-align: center;
 }
 
@@ -22,4 +22,27 @@ h1 {
   color: #d32f2f;
   font-size: 0.9rem;
   margin: 0.5rem 0;
+}
+
+.app__unsupported {
+  color: #d32f2f;
+  font-size: 1.1rem;
+  padding: 2rem;
+  background: #fce4ec;
+  border-radius: 8px;
+}
+
+.app__shortcuts {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0.5rem 0;
+}
+
+.app__shortcuts kbd {
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: monospace;
+  font-size: 0.75rem;
 }

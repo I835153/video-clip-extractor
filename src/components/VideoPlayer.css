@@ -12,6 +12,8 @@
 .video-player__info {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem;
   padding: 0.5rem 0;
   font-size: 0.85rem;
   color: #666;

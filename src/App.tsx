@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import './App.css';
 import { VideoInfo } from './types/clip';
 import VideoUploader from './components/VideoUploader';
@@ -13,6 +13,7 @@ import { useFFmpeg } from './hooks/useFFmpeg';
 
 function App() {
   const [video, setVideo] = useState<VideoInfo | null>(null);
+  const browserSupported = typeof SharedArrayBuffer !== 'undefined';
   const videoRef = useRef<HTMLVideoElement>(null);
   const ffmpeg = useFFmpeg();
   const { currentTime, duration, seek } = useVideoPlayer(
@@ -23,6 +24,7 @@ function App() {
     clips,
     clipStart,
     error,
+    overlappingClipIds,
     handleMarkStart,
     handleMarkEnd,
     handleUpdateClip,
@@ -40,10 +42,46 @@ function App() {
     seek(time);
   }
 
+  useEffect(() => {
+    if (!video) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+      switch (e.key) {
+        case 'i':
+        case 'I':
+          handleMarkStart();
+          break;
+        case 'o':
+        case 'O':
+          handleMarkEnd();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          handleStep(e.shiftKey ? -0.1 : -1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          handleStep(e.shiftKey ? 0.1 : 1);
+          break;
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  });
+
   return (
     <div className="app">
       <h1>Video Clip Extractor</h1>
-      {!video ? (
+      {!browserSupported ? (
+        <p className="app__unsupported">
+          Your browser does not support the required features for video
+          processing. Please use Chrome or Edge (version 92+) to use this tool.
+        </p>
+      ) : !video ? (
         <VideoUploader onVideoSelected={setVideo} />
       ) : (
         <>
@@ -67,9 +105,15 @@ function App() {
             onStep={handleStep}
             clipStart={clipStart}
           />
+          <p className="app__shortcuts">
+            Shortcuts: <kbd>I</kbd> Mark Start · <kbd>O</kbd> Mark End ·{' '}
+            <kbd>←</kbd>/<kbd>→</kbd> ±1s · <kbd>Shift</kbd>+<kbd>←</kbd>/
+            <kbd>→</kbd> ±0.1s
+          </p>
           {error && <p className="app__error">{error}</p>}
           <ClipList
             clips={clips}
+            overlappingClipIds={overlappingClipIds}
             onUpdateClip={handleUpdateClip}
             onDeleteClip={handleDeleteClip}
             onExportClip={handleExportClip}

@@ -49,4 +49,19 @@ describe('Timeline', () => {
     expect(onSeek).toHaveBeenCalledTimes(1);
     expect(onSeek).toHaveBeenCalledWith(30); // 300/600 * 60 = 30
   });
+
+  it('does not call onSeek when duration is 0', () => {
+    const onSeek = vi.fn();
+    render(
+      <Timeline duration={0} currentTime={0} clips={[]} onSeek={onSeek} />
+    );
+    const timeline = document.querySelector('.timeline') as HTMLElement;
+
+    Object.defineProperty(timeline, 'getBoundingClientRect', {
+      value: () => ({ left: 0, width: 600, top: 0, height: 40 }),
+    });
+
+    fireEvent.click(timeline, { clientX: 300 });
+    expect(onSeek).not.toHaveBeenCalled();
+  });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import VideoPlayer from './VideoPlayer';
 import { VideoInfo } from '../types/clip';
 
@@ -14,7 +14,12 @@ describe('VideoPlayer', () => {
   it('renders a video element', () => {
     const ref = { current: null };
     render(
-      <VideoPlayer video={mockVideo} playerRef={ref} currentTime={0} duration={120} />
+      <VideoPlayer
+        video={mockVideo}
+        playerRef={ref}
+        currentTime={0}
+        duration={120}
+      />
     );
     const video = document.querySelector('video');
     expect(video).toBeInTheDocument();
@@ -24,7 +29,12 @@ describe('VideoPlayer', () => {
   it('displays the video filename', () => {
     const ref = { current: null };
     render(
-      <VideoPlayer video={mockVideo} playerRef={ref} currentTime={0} duration={120} />
+      <VideoPlayer
+        video={mockVideo}
+        playerRef={ref}
+        currentTime={0}
+        duration={120}
+      />
     );
     expect(screen.getByText('demo.mp4')).toBeInTheDocument();
   });
@@ -32,8 +42,30 @@ describe('VideoPlayer', () => {
   it('displays the formatted file size', () => {
     const ref = { current: null };
     render(
-      <VideoPlayer video={mockVideo} playerRef={ref} currentTime={0} duration={120} />
+      <VideoPlayer
+        video={mockVideo}
+        playerRef={ref}
+        currentTime={0}
+        duration={120}
+      />
     );
     expect(screen.getByText('25.0 MB')).toBeInTheDocument();
+  });
+
+  it('shows error message on video error', () => {
+    const ref = { current: null };
+    render(
+      <VideoPlayer
+        video={mockVideo}
+        playerRef={ref}
+        currentTime={0}
+        duration={120}
+      />
+    );
+    const video = document.querySelector('video') as HTMLVideoElement;
+    fireEvent.error(video);
+    expect(
+      screen.getByText(/not supported by your browser/i)
+    ).toBeInTheDocument();
   });
 });

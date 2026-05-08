@@ -21,11 +21,11 @@ export function useFFmpeg() {
       const baseURL = window.location.origin;
       const coreURL = await toBlobURL(
         `${baseURL}/ffmpeg-core.js`,
-        'text/javascript',
+        'text/javascript'
       );
       const wasmURL = await toBlobURL(
         `${baseURL}/ffmpeg-core.wasm`,
-        'application/wasm',
+        'application/wasm'
       );
       await ffmpeg.load({ coreURL, wasmURL });
 
@@ -43,7 +43,7 @@ export function useFFmpeg() {
       file: File,
       startTime: number,
       endTime: number,
-      sourceWritten?: boolean,
+      sourceWritten?: boolean
     ): Promise<Blob> => {
       const ffmpeg = ffmpegRef.current;
       if (!ffmpeg) throw new Error('FFmpeg not loaded');
@@ -72,7 +72,7 @@ export function useFFmpeg() {
 
       return new Blob([data], { type: 'video/mp4' });
     },
-    [],
+    []
   );
 
   const cleanup = useCallback(async () => {

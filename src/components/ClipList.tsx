@@ -5,6 +5,7 @@ import './ClipList.css';
 
 interface ClipListProps {
   clips: Clip[];
+  overlappingClipIds?: Set<string>;
   onUpdateClip: (id: string, updates: Partial<Clip>) => void;
   onDeleteClip: (id: string) => void;
   onExportClip: (id: string) => void;
@@ -13,6 +14,7 @@ interface ClipListProps {
 
 export default function ClipList({
   clips,
+  overlappingClipIds,
   onUpdateClip,
   onDeleteClip,
   onExportClip,
@@ -29,36 +31,40 @@ export default function ClipList({
 
   return (
     <div className="clip-list">
-      <table className="clip-list__table">
-        <thead>
-          <tr>
-            <th>Label</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Duration</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {clips.map((clip) => (
-            <ClipRow
-              key={clip.id}
-              clip={clip}
-              onUpdateClip={onUpdateClip}
-              onDeleteClip={onDeleteClip}
-              onExportClip={onExportClip}
-              onPreviewClip={onPreviewClip}
-            />
-          ))}
-        </tbody>
-      </table>
+      <div className="clip-list__scroll">
+        <table className="clip-list__table">
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clips.map((clip) => (
+              <ClipRow
+                key={clip.id}
+                clip={clip}
+                isOverlapping={overlappingClipIds?.has(clip.id) ?? false}
+                onUpdateClip={onUpdateClip}
+                onDeleteClip={onDeleteClip}
+                onExportClip={onExportClip}
+                onPreviewClip={onPreviewClip}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 interface ClipRowProps {
   clip: Clip;
+  isOverlapping: boolean;
   onUpdateClip: (id: string, updates: Partial<Clip>) => void;
   onDeleteClip: (id: string) => void;
   onExportClip: (id: string) => void;
@@ -67,6 +73,7 @@ interface ClipRowProps {
 
 function ClipRow({
   clip,
+  isOverlapping,
   onUpdateClip,
   onDeleteClip,
   onExportClip,
@@ -130,6 +137,14 @@ function ClipRow({
         <span className={`clip-list__status clip-list__status--${clip.status}`}>
           {clip.status}
         </span>
+        {isOverlapping && (
+          <span
+            className="clip-list__overlap-warning"
+            title="This clip overlaps with another clip"
+          >
+            ⚠️
+          </span>
+        )}
       </td>
       <td className="clip-list__actions">
         <button onClick={() => onPreviewClip(clip.id)}>Preview</button>

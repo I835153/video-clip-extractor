@@ -50,4 +50,86 @@ describe('ExportPanel', () => {
     render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
     expect(screen.getByText('2 clips ready to export')).toBeInTheDocument();
   });
+
+  it('shows singular "clip" for 1 pending', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'pending' as const,
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.getByText('1 clip ready to export')).toBeInTheDocument();
+  });
+
+  it('shows done count in summary', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'done' as const,
+        outputUrl: 'blob:x',
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.getByText('1 done')).toBeInTheDocument();
+  });
+
+  it('shows error count in summary', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'error' as const,
+        error: 'fail',
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.getByText('1 error')).toBeInTheDocument();
+  });
+
+  it('shows both done and error in summary', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'done' as const,
+        outputUrl: 'blob:x',
+      },
+      {
+        id: '2',
+        label: 'C2',
+        startTime: 10,
+        endTime: 15,
+        status: 'error' as const,
+        error: 'fail',
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.getByText(/1 done/)).toBeInTheDocument();
+    expect(screen.getByText(/1 error/)).toBeInTheDocument();
+  });
+
+  it('disables Export All when clips are exporting', () => {
+    const clips = [
+      {
+        id: '1',
+        label: 'C1',
+        startTime: 0,
+        endTime: 5,
+        status: 'exporting' as const,
+      },
+    ];
+    render(<ExportPanel {...baseProps} ffmpegLoaded={true} clips={clips} />);
+    expect(screen.getByText('Export All Clips')).toBeDisabled();
+  });
 });
